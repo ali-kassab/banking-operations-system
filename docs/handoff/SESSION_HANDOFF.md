@@ -1,5 +1,60 @@
 # Session handoff
 
+## Session: 2026-11-23 — live demo (no code changes)
+
+### Project / release status
+- **v1.0.0 is complete and published** at https://github.com/ali-kassab/banking-operations-system (`main` = `9f02286`).
+- This session changed **no source code**. The only file edited is this handoff file.
+
+### What was done
+- Started the API (`dotnet run --project Banking.API`, http://localhost:5080) and the Angular dev server
+  (`npx ng serve`, http://localhost:4200) using the existing Development configuration (LocalDB `BankingOpsDb`).
+- Walked through the app in the browser pane as **Admin**:
+  - login → dashboard (live totals and recent transactions)
+  - Customers: created the fictional customer **Nadia Demo** (`nadia.demo@example.com`, `NID-DEMO-01`)
+  - showed the duplicate-email rule (409 message shown in the UI)
+  - showed server-side search ("khalil")
+  - Accounts list as Admin: the "+ Open account" button is visible
+- The servers were restarted once because the earlier session's background processes had ended. The log showed no crash.
+
+### Demo steps NOT completed (stopped at the user's request for a safe shutdown)
+- Open an account for Nadia Demo; deposit/withdraw on it; transfer; show updated balances; transaction history page.
+- Sign out → sign in as `employee` → show the permission differences (no "Open account" button; `POST /api/accounts` → 403).
+  These flows were already verified in the 2026-11-22 session (see below), but were not re-shown in this demo.
+
+### Data changes (local dev database only)
+- LocalDB `BankingOpsDb` now also contains the customer "Nadia Demo" (0 accounts). Nothing was deleted.
+- Earlier smoke-test data (customer "Test Smoke", account 7528224661 for Omar Khalil, a few transfers) also remains.
+
+### Checks run this session (actual results)
+| Command | Result |
+|---------|--------|
+| `dotnet test backend/Banking.Tests` | Passed 36, Failed 0, Skipped 0 |
+| `npm run build` (frontend/banking-client) | Success, initial bundle 367.15 kB (95.44 kB transferred) |
+| `git status` before the handoff edit | clean; `main` in sync with `origin/main` |
+
+### Known issues found
+- **Cosmetic (Customers page):** after a failed "Create customer" (e.g. duplicate email), pressing **Cancel** hides the form
+  but the red error message stays visible until the next successful action. Fix: clear `error` in the Cancel/toggle
+  handler in `frontend/banking-client/src/app/pages/customers/customers.component.html` (the same pattern exists on the Accounts page).
+  Not fixed: the user asked for no design or code changes during the demo.
+
+### Git / publishing state
+- Branch: `main` (the only branch; tracks `origin/main`). HEAD = `9f02286`.
+- The edit to this file is **left uncommitted**. Project rules for this session say never push to `main` and don't
+  create or switch branches without authorization. No authorized feature branch exists, so there was nowhere safe to push.
+- Next session: either create a feature branch (with the user's OK) and commit this file there, or let the user commit it.
+
+### Exact next step for the next session
+1. Ask the user which branch should receive the handoff update (e.g. `docs/session-2026-11-23`). Commit
+   `docs/handoff/SESSION_HANDOFF.md` there as `ali-kassab <alikassab155@gmail.com>`, then push that branch (never `main`).
+2. If the user wants the demo finished: start both servers (commands above), sign in as `admin`, open an account for
+   Nadia Demo, then deposit → withdraw → transfer → Transactions page → sign out → sign in as `employee` and show the
+   missing "Open account" button.
+3. Optional small fix: clear stale error messages on Cancel (Customers and Accounts pages).
+
+---
+
 ## Session: 2026-11-22 — initial build (v1.0.0)
 
 ### Accomplished
