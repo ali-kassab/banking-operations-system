@@ -1,0 +1,32 @@
+# ---------- .NET ----------
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.trx
+*.coverage
+
+# Local secrets / overrides (never commit real keys or connection strings)
+**/appsettings.*.local.json
+**/appsettings.Production.json
+secrets.json
+.env
+.env.*
+
+# ---------- Node / Angular ----------
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+
+# ---------- Editors / OS ----------
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---------- Local tooling ----------
+.claude/
