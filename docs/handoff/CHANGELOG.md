@@ -2,6 +2,11 @@
 
 All notable changes, newest first.
 
+## [Unreleased]
+
+### Fixed
+- Customers and Accounts pages: pressing Cancel after a failed create now clears the error message.
+
 ## [1.0.0] — 2026-11-22
 
 ### Added

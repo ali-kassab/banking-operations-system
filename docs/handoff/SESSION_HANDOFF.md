@@ -1,5 +1,45 @@
 # Session handoff
 
+## Session: 2026-11-23 (2) — fix stale form errors on Cancel
+
+### Project / release status
+- v1.0.0 is complete and published (`main` = `9f02286`). There is **no further approved roadmap** (no R-numbered releases);
+  the *Known limitations* list in `PROJECT_HANDOFF.md` is optional ideas, to be started only when the user picks one.
+
+### Task completed
+- Fixed the cosmetic issue found in the demo: after a failed create (e.g. duplicate email), pressing **Cancel** left the red
+  error message visible. The Cancel / "+ New" toggle button now also runs `error.set('')`.
+- Files: `frontend/banking-client/src/app/pages/customers/customers.component.html`,
+  `frontend/banking-client/src/app/pages/accounts/accounts.component.html` (one line each). No other code changed.
+- Reused the existing `error` signal; no new dependencies.
+
+### Checks run (actual results)
+| Command | Result |
+|---------|--------|
+| `npm run build` (frontend/banking-client) | Success, initial bundle 367.18 kB (95.46 kB transferred) |
+| Browser check of the fix | **Not done** (needs API + LocalDB running) |
+| Backend tests | Not re-run (no backend change); last run 36/36 passed |
+
+### Git / publishing state
+- Branch **`fix/clear-form-errors-on-cancel`**, created from `docs/session-2026-11-23` (so it also contains that branch's
+  handoff commits), pushed to `origin` with the user's approval. Not merged; no PR opened.
+- `main` unchanged at `9f02286`.
+
+### Exact next step for the next session
+1. Ask the user whether to open PRs for `docs/session-2026-11-23` and/or `fix/clear-form-errors-on-cancel` into `main`
+   (never merge or push to `main` without explicit approval).
+2. Optionally verify the fix in the browser: start the API + `npx ng serve`, sign in as `admin`, create a customer with a
+   duplicate email, press Cancel → the error message must disappear (same check on the Accounts page).
+3. Further work only if the user picks an item from *Known limitations* (suggested order: paging → user management →
+   refresh tokens → frontend tests → CI).
+
+### Constraints to keep
+- Readability over features; no MediatR/CQRS/generic repositories/AutoMapper/UI libraries.
+- Layering: DTO → service → thin controller → Angular API method → page.
+- Git identity `ali-kassab`; no AI attribution in commits; push/merge/PR only with explicit approval; never touch `main`.
+
+---
+
 ## Session: 2026-11-23 — live demo (no code changes)
 
 ### Project / release status

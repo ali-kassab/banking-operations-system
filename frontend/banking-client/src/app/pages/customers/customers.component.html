@@ -1,6 +1,6 @@
 <div class="page-header">
   <h1>Customers</h1>
-  <button class="btn" (click)="showForm.set(!showForm()); success.set('')">
+  <button class="btn" (click)="showForm.set(!showForm()); success.set(''); error.set('')">
     {{ showForm() ? 'Cancel' : '+ New customer' }}
   </button>
 </div>

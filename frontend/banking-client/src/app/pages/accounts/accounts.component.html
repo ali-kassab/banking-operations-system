@@ -2,7 +2,7 @@
   <h1>Bank accounts</h1>
   <!-- Only admins may open accounts. The API enforces this too (403 for employees). -->
   @if (auth.isAdmin()) {
-    <button class="btn" (click)="showForm.set(!showForm()); success.set('')">
+    <button class="btn" (click)="showForm.set(!showForm()); success.set(''); error.set('')">
       {{ showForm() ? 'Cancel' : '+ Open account' }}
     </button>
   }
