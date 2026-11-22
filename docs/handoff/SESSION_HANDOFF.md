@@ -40,14 +40,13 @@
   Not fixed: the user asked for no design or code changes during the demo.
 
 ### Git / publishing state
-- Branch: `main` (the only branch; tracks `origin/main`). HEAD = `9f02286`.
-- The edit to this file is **left uncommitted**. Project rules for this session say never push to `main` and don't
-  create or switch branches without authorization. No authorized feature branch exists, so there was nowhere safe to push.
-- Next session: either create a feature branch (with the user's OK) and commit this file there, or let the user commit it.
+- `main` is unchanged at `9f02286` (in sync with `origin/main`).
+- With the user's approval, this handoff update was committed on the new branch **`docs/session-2026-11-23`**
+  (created from `main`) and pushed to `origin/docs/session-2026-11-23`. It was **not** merged into `main`.
 
 ### Exact next step for the next session
-1. Ask the user which branch should receive the handoff update (e.g. `docs/session-2026-11-23`). Commit
-   `docs/handoff/SESSION_HANDOFF.md` there as `ali-kassab <alikassab155@gmail.com>`, then push that branch (never `main`).
+1. Ask the user whether to open a pull request from `docs/session-2026-11-23` into `main`, or merge it themselves.
+   Never merge or push to `main` without explicit approval.
 2. If the user wants the demo finished: start both servers (commands above), sign in as `admin`, open an account for
    Nadia Demo, then deposit → withdraw → transfer → Transactions page → sign out → sign in as `employee` and show the
    missing "Open account" button.
