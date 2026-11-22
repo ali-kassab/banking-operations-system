@@ -1,0 +1,103 @@
+<div class="page-header">
+  <h1>Customers</h1>
+  <button class="btn" (click)="showForm.set(!showForm()); success.set('')">
+    {{ showForm() ? 'Cancel' : '+ New customer' }}
+  </button>
+</div>
+
+@if (success()) {
+  <div class="alert alert-success">{{ success() }}</div>
+}
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+@if (showForm()) {
+  <form class="card form-grid" [formGroup]="form" (ngSubmit)="save()">
+    <h2 class="full">New customer</h2>
+    <label>
+      First name
+      <input formControlName="firstName" />
+      @if (form.controls.firstName.touched && form.controls.firstName.invalid) {
+        <small class="field-error">First name is required.</small>
+      }
+    </label>
+    <label>
+      Last name
+      <input formControlName="lastName" />
+      @if (form.controls.lastName.touched && form.controls.lastName.invalid) {
+        <small class="field-error">Last name is required.</small>
+      }
+    </label>
+    <label>
+      Email
+      <input type="email" formControlName="email" />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <small class="field-error">Enter a valid email address.</small>
+      }
+    </label>
+    <label>
+      Phone number
+      <input formControlName="phoneNumber" placeholder="+961-70-000-000" />
+      @if (form.controls.phoneNumber.touched && form.controls.phoneNumber.invalid) {
+        <small class="field-error">Phone number is required.</small>
+      }
+    </label>
+    <label>
+      National ID
+      <input formControlName="nationalId" />
+      @if (form.controls.nationalId.touched && form.controls.nationalId.invalid) {
+        <small class="field-error">National ID is required.</small>
+      }
+    </label>
+    <div class="full">
+      <button class="btn" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Create customer' }}
+      </button>
+    </div>
+  </form>
+}
+
+<section class="card">
+  <input
+    class="search"
+    placeholder="Search by name, email or national ID…"
+    [value]="search()"
+    (keyup.enter)="onSearch($any($event.target).value)"
+    (search)="onSearch($any($event.target).value)"
+    type="search"
+  />
+
+  @if (customers().length === 0) {
+    <p class="muted">No customers found.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>National ID</th>
+            <th class="num">Accounts</th>
+            <th>Since</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of customers(); track c.id) {
+            <tr>
+              <td>{{ c.fullName }}</td>
+              <td>{{ c.email }}</td>
+              <td>{{ c.phoneNumber }}</td>
+              <td>{{ c.nationalId }}</td>
+              <td class="num">{{ c.accountCount }}</td>
+              <td>{{ c.createdAt | date: 'mediumDate' }}</td>
+              <td><a [routerLink]="['/accounts']" [queryParams]="{ customerId: c.id }">Accounts →</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

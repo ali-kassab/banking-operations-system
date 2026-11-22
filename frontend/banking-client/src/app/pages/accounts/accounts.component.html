@@ -1,0 +1,96 @@
+<div class="page-header">
+  <h1>Bank accounts</h1>
+  <!-- Only admins may open accounts. The API enforces this too (403 for employees). -->
+  @if (auth.isAdmin()) {
+    <button class="btn" (click)="showForm.set(!showForm()); success.set('')">
+      {{ showForm() ? 'Cancel' : '+ Open account' }}
+    </button>
+  }
+</div>
+
+@if (success()) {
+  <div class="alert alert-success">{{ success() }}</div>
+}
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+@if (showForm()) {
+  <form class="card form-grid" [formGroup]="form" (ngSubmit)="save()">
+    <h2 class="full">Open a new account</h2>
+    <label>
+      Customer
+      <select formControlName="customerId">
+        <option [ngValue]="0" disabled>Select a customer…</option>
+        @for (c of customers(); track c.id) {
+          <option [ngValue]="c.id">{{ c.fullName }} ({{ c.nationalId }})</option>
+        }
+      </select>
+      @if (form.controls.customerId.touched && form.controls.customerId.invalid) {
+        <small class="field-error">Choose a customer.</small>
+      }
+    </label>
+    <label>
+      Account type
+      <select formControlName="type">
+        <option value="Checking">Checking</option>
+        <option value="Savings">Savings</option>
+      </select>
+    </label>
+    <label>
+      Initial deposit
+      <input type="number" min="0" step="0.01" formControlName="initialDeposit" />
+      @if (form.controls.initialDeposit.invalid) {
+        <small class="field-error">Must be between 0 and 1,000,000.</small>
+      }
+    </label>
+    <div class="full">
+      <button class="btn" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Opening…' : 'Open account' }}
+      </button>
+    </div>
+  </form>
+}
+
+<section class="card">
+  <label class="inline">
+    Customer
+    <select #filter (change)="filterByCustomer(filter.value)">
+      <option value="" [selected]="!customerId()">All customers</option>
+      @for (c of customers(); track c.id) {
+        <option [value]="c.id" [selected]="customerId() === '' + c.id">{{ c.fullName }}</option>
+      }
+    </select>
+  </label>
+
+  @if (accounts().length === 0) {
+    <p class="muted">No accounts found.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Account number</th>
+            <th>Customer</th>
+            <th>Type</th>
+            <th class="num">Balance</th>
+            <th>Opened</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of accounts(); track a.id) {
+            <tr>
+              <td class="mono">{{ a.accountNumber }}</td>
+              <td>{{ a.customerName }}</td>
+              <td>{{ a.type }}</td>
+              <td class="num">{{ a.balance | currency }}</td>
+              <td>{{ a.createdAt | date: 'mediumDate' }}</td>
+              <td><a [routerLink]="['/accounts', a.id]">Open →</a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

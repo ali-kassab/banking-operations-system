@@ -1,0 +1,65 @@
+<h1>Transfer money</h1>
+
+<form class="card form-grid" [formGroup]="form" (ngSubmit)="submit()">
+  <label>
+    From account
+    <select formControlName="fromAccountId">
+      <option [ngValue]="0" disabled>Select source account…</option>
+      @for (a of accounts(); track a.id) {
+        <option [ngValue]="a.id">{{ a.accountNumber }} · {{ a.customerName }} · {{ a.balance | currency }}</option>
+      }
+    </select>
+    @if (form.controls.fromAccountId.touched && form.controls.fromAccountId.invalid) {
+      <small class="field-error">Choose the source account.</small>
+    }
+  </label>
+
+  <label>
+    To account
+    <select formControlName="toAccountId">
+      <option [ngValue]="0" disabled>Select destination account…</option>
+      @for (a of accounts(); track a.id) {
+        <option [ngValue]="a.id">{{ a.accountNumber }} · {{ a.customerName }}</option>
+      }
+    </select>
+    @if (form.controls.toAccountId.touched && form.controls.toAccountId.invalid) {
+      <small class="field-error">Choose the destination account.</small>
+    }
+  </label>
+
+  <label>
+    Amount
+    <input type="number" min="0.01" step="0.01" formControlName="amount" />
+    @if (sourceAccount(); as source) {
+      <small class="muted">Available: {{ source.balance | currency }}</small>
+    }
+    @if (exceedsBalance()) {
+      <small class="field-error">Amount exceeds the available balance.</small>
+    } @else if (form.controls.amount.touched && form.controls.amount.invalid) {
+      <small class="field-error">Enter an amount between 0.01 and 1,000,000.</small>
+    }
+  </label>
+
+  <label>
+    Description (optional)
+    <input formControlName="description" maxlength="200" />
+  </label>
+
+  @if (error()) {
+    <div class="alert alert-error full">{{ error() }}</div>
+  }
+
+  @if (result(); as r) {
+    <div class="alert alert-success full">
+      Transferred <strong>{{ r.amount | currency }}</strong> (ref <span class="mono">{{ r.referenceNumber }}</span>).
+      New balances: {{ r.fromAccount.accountNumber }} → {{ r.fromAccount.balance | currency }},
+      {{ r.toAccount.accountNumber }} → {{ r.toAccount.balance | currency }}.
+    </div>
+  }
+
+  <div class="full">
+    <button class="btn" type="submit" [disabled]="saving() || exceedsBalance()">
+      {{ saving() ? 'Transferring…' : 'Transfer' }}
+    </button>
+  </div>
+</form>
