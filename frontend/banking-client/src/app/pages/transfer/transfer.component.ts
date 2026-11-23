@@ -3,7 +3,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs';
-import { BankingApiService } from '../../core/banking-api.service';
+import { BankingApiService, MAX_PAGE_SIZE } from '../../core/banking-api.service';
 import { errorMessage } from '../../core/error-message';
 import { Account, TransferResponse } from '../../core/models';
 
@@ -50,9 +50,10 @@ export class TransferComponent {
   }
 
   private loadAccounts(): void {
-    this.api.getAccounts().subscribe({
+    // The account pickers list the first MAX_PAGE_SIZE accounts (sorted by account number).
+    this.api.getAccounts(undefined, 1, MAX_PAGE_SIZE).subscribe({
       next: (data) => {
-        this.accounts.set(data);
+        this.accounts.set(data.items);
         const preselected = Number(this.from());
         if (preselected && this.form.controls.fromAccountId.value === 0) {
           this.form.controls.fromAccountId.setValue(preselected);

@@ -1,23 +1,23 @@
 import { Component, inject, signal } from '@angular/core';
-import { BankingApiService } from '../../core/banking-api.service';
+import { BankingApiService, PAGE_SIZE } from '../../core/banking-api.service';
 import { errorMessage } from '../../core/error-message';
-import { Transaction } from '../../core/models';
+import { PagedResponse, Transaction } from '../../core/models';
+import { PagerComponent } from '../../shared/pager.component';
 import { TransactionTableComponent } from '../../shared/transaction-table.component';
 
-/** The latest transactions across all accounts. Per-account history lives on the account page. */
+/** All transactions across all accounts, newest first. Per-account history lives on the account page. */
 @Component({
   selector: 'app-transactions',
-  imports: [TransactionTableComponent],
+  imports: [TransactionTableComponent, PagerComponent],
   template: `
     <div class="page-header">
       <h1>Transaction history</h1>
       <label class="inline">
-        Show
-        <select #take (change)="load(+take.value)">
-          <option value="25">25</option>
-          <option value="50" selected>50</option>
-          <option value="100">100</option>
-          <option value="200">200</option>
+        Per page
+        <select #size (change)="changePageSize(+size.value)">
+          @for (option of pageSizes; track option) {
+            <option [value]="option" [selected]="option === pageSize()">{{ option }}</option>
+          }
         </select>
       </label>
     </div>
@@ -27,24 +27,32 @@ import { TransactionTableComponent } from '../../shared/transaction-table.compon
     }
 
     <section class="card">
-      <app-transaction-table [transactions]="transactions()" />
+      <app-transaction-table [transactions]="result()?.items ?? []" />
+      <app-pager [result]="result()" (pageChange)="load($event)" />
     </section>
   `,
 })
 export class TransactionsComponent {
   private readonly api = inject(BankingApiService);
 
-  protected readonly transactions = signal<Transaction[]>([]);
+  protected readonly pageSizes = [10, 20, 50, 100];
+  protected readonly pageSize = signal(PAGE_SIZE);
+  protected readonly result = signal<PagedResponse<Transaction> | null>(null);
   protected readonly error = signal('');
 
   constructor() {
-    this.load(50);
+    this.load(1);
   }
 
-  load(take: number): void {
-    this.api.getRecentTransactions(take).subscribe({
-      next: (data) => this.transactions.set(data),
+  load(page: number): void {
+    this.api.getTransactions(page, this.pageSize()).subscribe({
+      next: (data) => this.result.set(data),
       error: (err) => this.error.set(errorMessage(err)),
     });
+  }
+
+  changePageSize(size: number): void {
+    this.pageSize.set(size);
+    this.load(1);
   }
 }

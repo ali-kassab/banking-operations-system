@@ -28,15 +28,17 @@ code, .mono { font-family: ui-monospace, Consolas, monospace; font-size: 0.9em; 
 
 /* ----- Layout ----- */
 .topbar {
-  display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
   padding: 0.75rem 1.5rem; background: #101828; color: #fff;
 }
 .topbar .brand { color: #fff; font-weight: 700; font-size: 1.1rem; }
 .topbar nav { display: flex; gap: 0.25rem; flex: 1; flex-wrap: wrap; }
-.topbar nav a { color: #cbd3e1; padding: 0.4rem 0.75rem; border-radius: 6px; }
+.topbar nav a { color: #cbd3e1; padding: 0.4rem 0.6rem; border-radius: 6px; }
 .topbar nav a:hover { color: #fff; background: #1d2939; text-decoration: none; }
 .topbar nav a.active { color: #fff; background: var(--primary); }
 .topbar .user { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; }
+/* Below 1100px the full name is hidden so all nav links (6 for admins) stay on one line. */
+@media (max-width: 1100px) { .topbar .user-name { display: none; } }
 .badge { background: #344054; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; }
 
 .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
@@ -106,3 +108,10 @@ td.negative { color: var(--error); }
 .login-card h1 { margin: 0; }
 .login-card p { margin: 0; }
 .hint { font-size: 0.8rem; color: var(--muted); }
+
+/* Pagination (shared/pager.component.ts) */
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+
+/* Users page */
+.tag-inactive { background: #f2f4f7; color: #667085; }
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
