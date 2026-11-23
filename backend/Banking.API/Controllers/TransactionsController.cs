@@ -23,6 +23,6 @@ public class TransactionsController : ControllerBase
 
     /// <summary>Transactions across all accounts, newest first, one page at a time.</summary>
     [HttpGet("transactions")]
-    public async Task<ActionResult<PagedResponse<TransactionResponse>>> GetAll([FromQuery] PageQuery page, CancellationToken ct) =>
-        Ok(await _transactionService.GetAllAsync(page, ct));
+    public async Task<ActionResult<PagedResponse<TransactionResponse>>> GetAll([FromQuery] PageQuery paging, CancellationToken ct) =>
+        Ok(await _transactionService.GetAllAsync(paging, ct));
 }

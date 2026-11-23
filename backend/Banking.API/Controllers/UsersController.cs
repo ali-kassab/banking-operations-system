@@ -20,8 +20,8 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<UserResponse>>> GetAll([FromQuery] PageQuery page, CancellationToken ct) =>
-        Ok(await _userService.GetPageAsync(page, ct));
+    public async Task<ActionResult<PagedResponse<UserResponse>>> GetAll([FromQuery] PageQuery paging, CancellationToken ct) =>
+        Ok(await _userService.GetPageAsync(paging, ct));
 
     [HttpPost]
     public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request, CancellationToken ct)

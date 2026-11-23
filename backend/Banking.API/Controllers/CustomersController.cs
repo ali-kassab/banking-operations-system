@@ -19,8 +19,8 @@ public class CustomersController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PagedResponse<CustomerResponse>>> GetAll(
-        [FromQuery] string? search, [FromQuery] PageQuery page, CancellationToken ct) =>
-        Ok(await _customerService.GetPageAsync(search, page, ct));
+        [FromQuery] string? search, [FromQuery] PageQuery paging, CancellationToken ct) =>
+        Ok(await _customerService.GetPageAsync(search, paging, ct));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CustomerResponse>> GetById(int id, CancellationToken ct) =>

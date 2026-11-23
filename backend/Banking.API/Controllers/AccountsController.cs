@@ -22,8 +22,8 @@ public class AccountsController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<PagedResponse<AccountResponse>>> GetAll(
-        [FromQuery] int? customerId, [FromQuery] PageQuery page, CancellationToken ct) =>
-        Ok(await _accountService.GetPageAsync(customerId, page, ct));
+        [FromQuery] int? customerId, [FromQuery] PageQuery paging, CancellationToken ct) =>
+        Ok(await _accountService.GetPageAsync(customerId, paging, ct));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<AccountResponse>> GetById(int id, CancellationToken ct) =>
@@ -48,6 +48,6 @@ public class AccountsController : ControllerBase
 
     [HttpGet("{id:int}/transactions")]
     public async Task<ActionResult<PagedResponse<TransactionResponse>>> GetTransactions(
-        int id, [FromQuery] PageQuery page, CancellationToken ct) =>
-        Ok(await _transactionService.GetAccountHistoryAsync(id, page, ct));
+        int id, [FromQuery] PageQuery paging, CancellationToken ct) =>
+        Ok(await _transactionService.GetAccountHistoryAsync(id, paging, ct));
 }

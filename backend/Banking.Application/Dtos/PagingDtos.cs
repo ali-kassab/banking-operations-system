@@ -5,6 +5,8 @@ namespace Banking.Application.Dtos;
 /// <summary>
 /// "?page=2&amp;pageSize=20" query parameters shared by every list endpoint.
 /// Invalid values (page 0, pageSize 500) are rejected with 400 by the [ApiController] validation.
+/// In controllers, name the parameter <c>paging</c>, NOT <c>page</c>: a parameter called "page" makes
+/// model binding look for "page.Page" / "page.PageSize" and silently fall back to the defaults.
 /// </summary>
 public class PageQuery
 {
