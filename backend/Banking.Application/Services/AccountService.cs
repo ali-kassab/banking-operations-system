@@ -30,10 +30,11 @@ public class AccountService
         _logger = logger;
     }
 
-    public async Task<List<AccountResponse>> GetAllAsync(int? customerId, CancellationToken ct = default)
+    public async Task<PagedResponse<AccountResponse>> GetPageAsync(int? customerId, PageQuery page, CancellationToken ct = default)
     {
-        var accounts = await _accounts.GetAllAsync(customerId, ct);
-        return accounts.Select(a => a.ToResponse()).ToList();
+        var (accounts, total) = await _accounts.GetPageAsync(customerId, page.Skip, page.PageSize, ct);
+        return new PagedResponse<AccountResponse>(
+            accounts.Select(a => a.ToResponse()).ToList(), page.Page, page.PageSize, total);
     }
 
     public async Task<AccountResponse> GetByIdAsync(int id, CancellationToken ct = default)

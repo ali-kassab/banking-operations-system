@@ -20,10 +20,11 @@ public class CustomerService
         _logger = logger;
     }
 
-    public async Task<List<CustomerResponse>> GetAllAsync(string? search, CancellationToken ct = default)
+    public async Task<PagedResponse<CustomerResponse>> GetPageAsync(string? search, PageQuery page, CancellationToken ct = default)
     {
-        var customers = await _customers.GetAllAsync(search, ct);
-        return customers.Select(c => c.ToResponse()).ToList();
+        var (customers, total) = await _customers.GetPageAsync(search, page.Skip, page.PageSize, ct);
+        return new PagedResponse<CustomerResponse>(
+            customers.Select(c => c.ToResponse()).ToList(), page.Page, page.PageSize, total);
     }
 
     public async Task<CustomerResponse> GetByIdAsync(int id, CancellationToken ct = default)

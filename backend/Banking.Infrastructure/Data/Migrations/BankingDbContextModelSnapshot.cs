@@ -111,6 +111,41 @@ namespace Banking.Infrastructure.Data.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("Banking.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("Banking.Domain.Entities.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -186,6 +221,9 @@ namespace Banking.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -219,6 +257,17 @@ namespace Banking.Infrastructure.Data.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("Banking.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Banking.Domain.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Banking.Domain.Entities.Transaction", b =>
                 {
                     b.HasOne("Banking.Domain.Entities.BankAccount", "BankAccount")
@@ -238,6 +287,11 @@ namespace Banking.Infrastructure.Data.Migrations
             modelBuilder.Entity("Banking.Domain.Entities.Customer", b =>
                 {
                     b.Navigation("Accounts");
+                });
+
+            modelBuilder.Entity("Banking.Domain.Entities.User", b =>
+                {
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

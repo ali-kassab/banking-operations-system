@@ -78,8 +78,22 @@ DTO validation (data annotations) is handled automatically by `[ApiController]` 
 - Login returns a JWT with `sub`, `name`, `role`; signed with HMAC-SHA256 (`Jwt:Key`, min 32 chars, not committed for non-dev).
 - `MapInboundClaims = false` + `NameClaimType = "name"`, `RoleClaimType = "role"` so `User.Identity.Name` and
   `[Authorize(Roles = "Admin")]` read exactly the claims we wrote.
-- Every controller has `[Authorize]`; `POST /api/accounts` additionally has `[Authorize(Roles = Roles.Admin)]`.
+- Every controller has `[Authorize]`; `POST /api/accounts` and the whole `UsersController` additionally have
+  `[Authorize(Roles = Roles.Admin)]`. `AuthController` is `[AllowAnonymous]`.
+- **Sessions**: the JWT lives 15 minutes. Login also returns a random 64-byte refresh token (7 days); only its SHA-256
+  hash is stored in `RefreshTokens`. `AuthService.RefreshAsync` rotates it (old token revoked, new one issued);
+  a revoked token presented again triggers revocation of all the user's tokens (reuse detection).
+  Logout, deactivation and password resets revoke tokens. A JWT cannot be revoked, hence the short lifetime.
+- **Deactivated users** (`Users.IsActive = false`) cannot log in or refresh. Users are never deleted because their
+  username is kept in `Transactions.PerformedBy`. An admin cannot deactivate their own account.
 - The Angular app hides admin-only buttons, but **the API is the authority** (an Employee calling the endpoint gets 403).
+
+### Paging
+- List endpoints bind `[FromQuery] PageQuery paging` (`page` ≥ 1, `pageSize` 1-100, validated by data annotations)
+  and return `PagedResponse<T>` (`items`, `page`, `pageSize`, `totalCount`, `totalPages`).
+- Repositories return `(Items, TotalCount)`: one `COUNT` and one `Skip/Take` query with a stable `ORDER BY`.
+- The parameter is named `paging` on purpose: a parameter called `page` makes MVC model binding treat `page` as a
+  prefix and silently ignore `?page=&pageSize=`.
 
 ### Logging
 Built-in `ILogger<T>`: successful money movements and sign-ins at Information, failed logins and rule violations at Warning,
@@ -89,11 +103,18 @@ unexpected exceptions at Error with the stack trace.
 
 ```
 src/app/
-├── core/       api.config.ts, models.ts, banking-api.service.ts, auth.service.ts, auth.guard.ts, auth.interceptor.ts, error-message.ts
+├── core/       api.config.ts, models.ts, banking-api.service.ts, auth.service.ts, auth.guard.ts (authGuard, adminGuard),
+│               auth.interceptor.ts, error-message.ts, testing.ts (test-only routes), *.spec.ts
 ├── layout/     shell.component.ts (top navigation + <router-outlet>)
-├── shared/     transaction-table.component.ts
-└── pages/      login, dashboard, customers, accounts, account-detail, transfer, transactions
+├── shared/     transaction-table.component.ts, pager.component.ts
+└── pages/      login, dashboard, customers, accounts, account-detail, transfer, transactions, users (admin)
 ```
+
+- **Session refresh**: `authInterceptor` catches a 401 on any non-`/auth/` request, calls `AuthService.refresh()`
+  once (parallel 401s share the same in-flight call), stores the new pair and repeats the request. If the refresh
+  fails, the session is cleared and the user lands on `/login`. `logout()` revokes the refresh token on the server.
+- **Tests**: `ng test` (Angular's `@angular/build:unit-test` builder) runs Vitest in jsdom. `src/test-setup.ts`
+  re-exposes jsdom's `localStorage`, which Node 25+ hides behind its own (undefined) global.
 
 - **Standalone components + signals**: Angular 22 apps are zoneless; component state lives in `signal()`s so the view
   updates when HTTP responses arrive.

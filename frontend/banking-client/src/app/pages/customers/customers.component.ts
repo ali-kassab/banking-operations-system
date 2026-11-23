@@ -4,17 +4,19 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BankingApiService } from '../../core/banking-api.service';
 import { errorMessage } from '../../core/error-message';
-import { Customer } from '../../core/models';
+import { Customer, PagedResponse } from '../../core/models';
+import { PagerComponent } from '../../shared/pager.component';
 
 @Component({
   selector: 'app-customers',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, PagerComponent],
   templateUrl: './customers.component.html',
 })
 export class CustomersComponent {
   private readonly api = inject(BankingApiService);
 
-  protected readonly customers = signal<Customer[]>([]);
+  protected readonly result = signal<PagedResponse<Customer> | null>(null);
+  protected readonly page = signal(1);
   protected readonly search = signal('');
   protected readonly showForm = signal(false);
   protected readonly saving = signal(false);
@@ -36,14 +38,20 @@ export class CustomersComponent {
   }
 
   load(): void {
-    this.api.getCustomers(this.search()).subscribe({
-      next: (data) => this.customers.set(data),
+    this.api.getCustomers(this.search(), this.page()).subscribe({
+      next: (data) => this.result.set(data),
       error: (err) => this.error.set(errorMessage(err)),
     });
   }
 
   onSearch(value: string): void {
     this.search.set(value);
+    this.page.set(1); // a new search starts at the first page
+    this.load();
+  }
+
+  goToPage(page: number): void {
+    this.page.set(page);
     this.load();
   }
 

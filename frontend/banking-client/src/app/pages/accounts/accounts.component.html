@@ -2,7 +2,7 @@
   <h1>Bank accounts</h1>
   <!-- Only admins may open accounts. The API enforces this too (403 for employees). -->
   @if (auth.isAdmin()) {
-    <button class="btn" (click)="showForm.set(!showForm()); success.set('')">
+    <button class="btn" (click)="showForm.set(!showForm()); success.set(''); error.set('')">
       {{ showForm() ? 'Cancel' : '+ Open account' }}
     </button>
   }
@@ -63,7 +63,7 @@
     </select>
   </label>
 
-  @if (accounts().length === 0) {
+  @if (!result()?.items?.length) {
     <p class="muted">No accounts found.</p>
   } @else {
     <div class="table-wrap">
@@ -79,7 +79,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (a of accounts(); track a.id) {
+          @for (a of result()?.items ?? []; track a.id) {
             <tr>
               <td class="mono">{{ a.accountNumber }}</td>
               <td>{{ a.customerName }}</td>
@@ -92,5 +92,6 @@
         </tbody>
       </table>
     </div>
+    <app-pager [result]="result()" (pageChange)="page.set($event)" />
   }
 </section>

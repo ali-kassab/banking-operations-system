@@ -29,6 +29,14 @@ public static class DtoMapper
         account.Customer?.FullName ?? string.Empty,
         account.CreatedAt);
 
+    public static UserResponse ToResponse(this User user) => new(
+        user.Id,
+        user.Username,
+        user.FullName,
+        user.Role.ToString(),
+        user.IsActive,
+        user.CreatedAt);
+
     public static TransactionResponse ToResponse(this Transaction transaction) => new(
         transaction.Id,
         transaction.BankAccountId,

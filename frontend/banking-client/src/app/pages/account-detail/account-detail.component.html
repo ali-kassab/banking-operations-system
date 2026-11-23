@@ -50,7 +50,8 @@
 
   <section class="card">
     <h2>Transaction history</h2>
-    <app-transaction-table [transactions]="transactions()" [showAccount]="false" />
+    <app-transaction-table [transactions]="history()?.items ?? []" [showAccount]="false" />
+    <app-pager [result]="history()" (pageChange)="goToHistoryPage($event)" />
   </section>
 } @else if (error()) {
   <div class="alert alert-error">{{ error() }}</div>

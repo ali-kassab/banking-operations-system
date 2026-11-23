@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Banking.Application.Abstractions;
 using Banking.Domain.Entities;
@@ -43,4 +44,15 @@ public class JwtTokenService : ITokenService
 
         return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
     }
+
+    public (string Token, string Hash, DateTime ExpiresAt) CreateRefreshToken()
+    {
+        // 64 random bytes from a cryptographically secure generator, URL-safe Base64 encoded.
+        var token = Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(64));
+        return (token, HashRefreshToken(token), DateTime.UtcNow.AddDays(_settings.RefreshTokenDays));
+    }
+
+    // A plain SHA-256 is enough here (unlike passwords): the token is long and random, so it cannot be guessed.
+    public string HashRefreshToken(string token) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 }

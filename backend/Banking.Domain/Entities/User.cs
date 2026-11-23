@@ -12,5 +12,14 @@ public class User
     public string FullName { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; }
+
+    /// <summary>
+    /// Deactivated users cannot sign in or refresh their session. Users are never deleted,
+    /// because their username stays in the transaction history ("PerformedBy").
+    /// </summary>
+    public bool IsActive { get; set; } = true;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public List<RefreshToken> RefreshTokens { get; set; } = new();
 }

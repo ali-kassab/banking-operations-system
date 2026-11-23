@@ -14,6 +14,7 @@ public class BankingDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -39,6 +40,20 @@ public class BankingDbContext : DbContext
             entity.Property(u => u.PasswordHash).IsRequired();
             entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
             entity.HasIndex(u => u.Username).IsUnique();
+            // IsActive has no database default on purpose (EF would then ignore an explicit "false" on insert);
+            // the AddUserManagementAndRefreshTokens migration sets existing rows to active.
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.Property(t => t.TokenHash).HasMaxLength(64).IsRequired(); // SHA-256 as hex
+            entity.HasIndex(t => t.TokenHash).IsUnique();
+
+            // Deleting a user (not offered by the API) would also remove their sessions.
+            entity.HasOne(t => t.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Customer>(entity =>

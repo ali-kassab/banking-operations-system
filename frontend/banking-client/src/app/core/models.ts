@@ -12,6 +12,8 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   expiresAt: string;
+  refreshToken: string;
+  refreshTokenExpiresAt: string;
   username: string;
   fullName: string;
   role: Role;
@@ -92,4 +94,29 @@ export interface DashboardSummary {
   totalBalance: number;
   transactionsToday: number;
   recentTransactions: Transaction[];
+}
+
+/** One page of a list endpoint (?page=&pageSize=). */
+export interface PagedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  fullName: string;
+  role: Role;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreateUserRequest {
+  username: string;
+  fullName: string;
+  password: string;
+  role: Role;
 }

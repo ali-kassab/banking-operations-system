@@ -1,0 +1,116 @@
+<div class="page-header">
+  <h1>Users</h1>
+  <button class="btn" (click)="toggleForm()">
+    {{ showForm() ? 'Cancel' : '+ New user' }}
+  </button>
+</div>
+
+@if (success()) {
+  <div class="alert alert-success">{{ success() }}</div>
+}
+@if (error()) {
+  <div class="alert alert-error">{{ error() }}</div>
+}
+
+@if (showForm()) {
+  <form class="card form-grid" [formGroup]="form" (ngSubmit)="save()">
+    <h2 class="full">New user</h2>
+    <label>
+      Username
+      <input formControlName="username" autocomplete="off" />
+      @if (form.controls.username.touched && form.controls.username.invalid) {
+        <small class="field-error">3-50 characters: letters, digits, ".", "_" or "-".</small>
+      }
+    </label>
+    <label>
+      Full name
+      <input formControlName="fullName" />
+      @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+        <small class="field-error">Full name is required.</small>
+      }
+    </label>
+    <label>
+      Password
+      <input type="password" formControlName="password" autocomplete="new-password" />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <small class="field-error">At least 8 characters with a letter and a digit.</small>
+      }
+    </label>
+    <label>
+      Role
+      <select formControlName="role">
+        <option value="Employee">Employee</option>
+        <option value="Admin">Admin</option>
+      </select>
+    </label>
+    <div class="full">
+      <button class="btn" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Create user' }}
+      </button>
+    </div>
+  </form>
+}
+
+@if (resetting(); as user) {
+  <form class="card form-grid" [formGroup]="resetForm" (ngSubmit)="submitReset()">
+    <h2 class="full">Reset password for {{ user.username }}</h2>
+    <label>
+      New password
+      <input type="password" formControlName="newPassword" autocomplete="new-password" />
+      @if (resetForm.controls.newPassword.touched && resetForm.controls.newPassword.invalid) {
+        <small class="field-error">At least 8 characters with a letter and a digit.</small>
+      }
+    </label>
+    <div class="full actions">
+      <button class="btn" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Reset password' }}
+      </button>
+      <button class="btn btn-secondary" type="button" (click)="cancelReset()">Cancel</button>
+    </div>
+  </form>
+}
+
+<section class="card">
+  @if (!result()?.items?.length) {
+    <p class="muted">No users found.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Full name</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of result()?.items ?? []; track u.id) {
+            <tr>
+              <td class="mono">{{ u.username }}</td>
+              <td>{{ u.fullName }}</td>
+              <td>{{ u.role }}</td>
+              <td>
+                <span class="tag" [class.tag-inactive]="!u.isActive">{{ u.isActive ? 'Active' : 'Deactivated' }}</span>
+              </td>
+              <td>{{ u.createdAt | date: 'mediumDate' }}</td>
+              <td class="actions">
+                @if (!isCurrentUser(u)) {
+                  <button class="btn btn-secondary" type="button" (click)="toggleActive(u)">
+                    {{ u.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                } @else {
+                  <span class="muted">(you)</span>
+                }
+                <button class="btn btn-secondary" type="button" (click)="startReset(u)">Reset password</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pager [result]="result()" (pageChange)="goToPage($event)" />
+  }
+</section>

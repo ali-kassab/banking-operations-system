@@ -7,3 +7,9 @@ export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   return auth.isLoggedIn() ? true : inject(Router).createUrlTree(['/login']);
 };
+
+/** Admin-only pages. The API enforces the same rule (403), this only keeps employees out of the UI. */
+export const adminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return auth.isAdmin() ? true : inject(Router).createUrlTree(['/dashboard']);
+};

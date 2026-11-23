@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { adminGuard, authGuard } from './core/auth.guard';
 import { ShellComponent } from './layout/shell.component';
 import { LoginComponent } from './pages/login/login.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
@@ -8,6 +8,7 @@ import { AccountsComponent } from './pages/accounts/accounts.component';
 import { AccountDetailComponent } from './pages/account-detail/account-detail.component';
 import { TransferComponent } from './pages/transfer/transfer.component';
 import { TransactionsComponent } from './pages/transactions/transactions.component';
+import { UsersComponent } from './pages/users/users.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Sign in' },
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'accounts/:id', component: AccountDetailComponent, title: 'Account' },
       { path: 'transfer', component: TransferComponent, title: 'Transfer' },
       { path: 'transactions', component: TransactionsComponent, title: 'Transactions' },
+      { path: 'users', component: UsersComponent, title: 'Users', canActivate: [adminGuard] },
     ],
   },
   { path: '**', redirectTo: '' },

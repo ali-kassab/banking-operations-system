@@ -1,6 +1,6 @@
 <div class="page-header">
   <h1>Customers</h1>
-  <button class="btn" (click)="showForm.set(!showForm()); success.set('')">
+  <button class="btn" (click)="showForm.set(!showForm()); success.set(''); error.set('')">
     {{ showForm() ? 'Cancel' : '+ New customer' }}
   </button>
 </div>
@@ -68,7 +68,7 @@
     type="search"
   />
 
-  @if (customers().length === 0) {
+  @if (!result()?.items?.length) {
     <p class="muted">No customers found.</p>
   } @else {
     <div class="table-wrap">
@@ -85,7 +85,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (c of customers(); track c.id) {
+          @for (c of result()?.items ?? []; track c.id) {
             <tr>
               <td>{{ c.fullName }}</td>
               <td>{{ c.email }}</td>
@@ -99,5 +99,6 @@
         </tbody>
       </table>
     </div>
+    <app-pager [result]="result()" (pageChange)="goToPage($event)" />
   }
 </section>

@@ -95,18 +95,22 @@ public class TransactionService
         return new TransferResponse(reference, request.Amount, from.ToResponse(), to.ToResponse());
     }
 
-    public async Task<List<TransactionResponse>> GetAccountHistoryAsync(int accountId, CancellationToken ct = default)
+    /// <summary>One page of an account's history, newest first.</summary>
+    public async Task<PagedResponse<TransactionResponse>> GetAccountHistoryAsync(int accountId, PageQuery page, CancellationToken ct = default)
     {
         await GetAccountOrThrowAsync(accountId, ct);
-        var transactions = await _transactions.GetByAccountIdAsync(accountId, ct);
-        return transactions.Select(t => t.ToResponse()).ToList();
+        return await GetPageAsync(accountId, page, ct);
     }
 
-    public async Task<List<TransactionResponse>> GetRecentAsync(int count, CancellationToken ct = default)
+    /// <summary>One page of transactions across all accounts, newest first.</summary>
+    public Task<PagedResponse<TransactionResponse>> GetAllAsync(PageQuery page, CancellationToken ct = default) =>
+        GetPageAsync(null, page, ct);
+
+    private async Task<PagedResponse<TransactionResponse>> GetPageAsync(int? accountId, PageQuery page, CancellationToken ct)
     {
-        count = Math.Clamp(count, 1, 200);
-        var transactions = await _transactions.GetRecentAsync(count, ct);
-        return transactions.Select(t => t.ToResponse()).ToList();
+        var (transactions, total) = await _transactions.GetPageAsync(accountId, page.Skip, page.PageSize, ct);
+        return new PagedResponse<TransactionResponse>(
+            transactions.Select(t => t.ToResponse()).ToList(), page.Page, page.PageSize, total);
     }
 
     private async Task<BankAccount> GetAccountOrThrowAsync(int accountId, CancellationToken ct) =>

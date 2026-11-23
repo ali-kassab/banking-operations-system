@@ -194,7 +194,7 @@ public class TransactionServiceTests : IDisposable
         Assert.Equal(574.75m, _database.GetBalance(aId));
         Assert.Equal(300m, _database.GetBalance(bId));
 
-        var history = await service.GetAccountHistoryAsync(aId);
+        var history = (await service.GetAccountHistoryAsync(aId, new PageQuery())).Items;
         Assert.Equal(4, history.Count);
         Assert.Equal(574.75m, history.First().BalanceAfter); // newest first; matches the current balance
     }
