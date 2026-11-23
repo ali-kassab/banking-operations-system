@@ -14,16 +14,23 @@ public class BankAccountRepository : IBankAccountRepository
         _db = db;
     }
 
-    public async Task<List<BankAccount>> GetAllAsync(int? customerId, CancellationToken ct = default)
+    public async Task<(List<BankAccount> Items, int TotalCount)> GetPageAsync(int? customerId, int skip, int take, CancellationToken ct = default)
     {
-        var query = _db.BankAccounts.AsNoTracking().Include(a => a.Customer).AsQueryable();
+        var query = _db.BankAccounts.AsNoTracking();
 
         if (customerId.HasValue)
         {
             query = query.Where(a => a.CustomerId == customerId.Value);
         }
 
-        return await query.OrderBy(a => a.AccountNumber).ToListAsync(ct);
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .Include(a => a.Customer)
+            .OrderBy(a => a.AccountNumber) // unique, so the paging order is stable
+            .Skip(skip).Take(take)
+            .ToListAsync(ct);
+
+        return (items, total);
     }
 
     // Tracked (no AsNoTracking) because callers may change the balance and save.

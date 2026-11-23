@@ -3,6 +3,7 @@ using Banking.Domain.Entities;
 using Banking.Domain.Enums;
 using Banking.Infrastructure.Data;
 using Banking.Infrastructure.Repositories;
+using Banking.Infrastructure.Security;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -36,6 +37,30 @@ public sealed class TestDatabase : IDisposable
         new TransactionRepository(db),
         new UnitOfWork(db),
         NullLogger<TransactionService>.Instance);
+
+    public static readonly JwtSettings Jwt = new()
+    {
+        Issuer = "test-issuer",
+        Audience = "test-audience",
+        Key = "unit-test-signing-key-that-is-long-enough-123",
+        ExpiryMinutes = 15,
+        RefreshTokenDays = 7
+    };
+
+    public static AuthService CreateAuthService(BankingDbContext db, PasswordHasher hasher) => new(
+        new UserRepository(db),
+        new RefreshTokenRepository(db),
+        new UnitOfWork(db),
+        hasher,
+        new JwtTokenService(Jwt),
+        NullLogger<AuthService>.Instance);
+
+    public static UserService CreateUserService(BankingDbContext db, PasswordHasher hasher) => new(
+        new UserRepository(db),
+        CreateAuthService(db, hasher),
+        new UnitOfWork(db),
+        hasher,
+        NullLogger<UserService>.Instance);
 
     /// <summary>Inserts a customer with one account holding <paramref name="balance"/> and returns the account id.</summary>
     public int AddAccount(string accountNumber, decimal balance)

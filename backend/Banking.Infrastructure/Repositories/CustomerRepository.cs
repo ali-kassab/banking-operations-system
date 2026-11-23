@@ -14,9 +14,9 @@ public class CustomerRepository : ICustomerRepository
         _db = db;
     }
 
-    public async Task<List<Customer>> GetAllAsync(string? search, CancellationToken ct = default)
+    public async Task<(List<Customer> Items, int TotalCount)> GetPageAsync(string? search, int skip, int take, CancellationToken ct = default)
     {
-        var query = _db.Customers.AsNoTracking().Include(c => c.Accounts).AsQueryable();
+        var query = _db.Customers.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -28,7 +28,14 @@ public class CustomerRepository : ICustomerRepository
                 c.NationalId.Contains(term));
         }
 
-        return await query.OrderBy(c => c.LastName).ThenBy(c => c.FirstName).ToListAsync(ct);
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .Include(c => c.Accounts) // needed for AccountCount in the response
+            .OrderBy(c => c.LastName).ThenBy(c => c.FirstName).ThenBy(c => c.Id) // stable order for paging
+            .Skip(skip).Take(take)
+            .ToListAsync(ct);
+
+        return (items, total);
     }
 
     public Task<Customer?> GetByIdAsync(int id, CancellationToken ct = default) =>

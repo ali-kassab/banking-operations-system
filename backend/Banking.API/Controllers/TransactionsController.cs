@@ -21,8 +21,8 @@ public class TransactionsController : ControllerBase
     public async Task<ActionResult<TransferResponse>> Transfer(TransferRequest request, CancellationToken ct) =>
         Ok(await _transactionService.TransferAsync(request, User.Identity!.Name!, ct));
 
-    /// <summary>Most recent transactions across all accounts.</summary>
+    /// <summary>Transactions across all accounts, newest first, one page at a time.</summary>
     [HttpGet("transactions")]
-    public async Task<ActionResult<List<TransactionResponse>>> GetRecent([FromQuery] int take = 50, CancellationToken ct = default) =>
-        Ok(await _transactionService.GetRecentAsync(take, ct));
+    public async Task<ActionResult<PagedResponse<TransactionResponse>>> GetAll([FromQuery] PageQuery page, CancellationToken ct) =>
+        Ok(await _transactionService.GetAllAsync(page, ct));
 }
