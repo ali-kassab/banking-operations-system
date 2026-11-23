@@ -25,7 +25,7 @@ Priority is **readability over features**. Do not add MediatR, CQRS, generic rep
 | TypeScript | ~6.0 |
 | Vitest / jsdom (frontend unit tests, devDependencies, pinned exact) | 4.1.12 / 31.0.0 |
 | Node used during development | 26.13.1 (Angular 22 supports ^22.22.3, ^24.15.0, >=26); CI uses Node 24 |
-| CI | GitHub Actions (`actions/checkout@v4`, `setup-dotnet@v4` 10.0.x, `setup-node@v4` 24) |
+| CI | GitHub Actions (`actions/checkout@v5`, `setup-dotnet@v5` 10.0.x, `setup-node@v5` 24; v5 actions run on Node 24) |
 
 ## 3. Architecture & responsibilities
 
@@ -141,7 +141,7 @@ sign-out revocation, employee restrictions, 375px layout).
 - An issued access token stays valid until expiry (≤ 15 min) after logout/deactivation.
 - Customer/account pickers (open account, transfer) load only the first 100 entries.
 - No browser end-to-end tests (frontend tests are unit tests).
-- GitHub Actions workflow verified locally only until it runs on GitHub.
+- Local dev database contains extra test users/data from verification (see SESSION_HANDOFF).
 
 ## 13. Build & test status (2026-11-23)
 
@@ -154,6 +154,7 @@ sign-out revocation, employee restrictions, 375px layout).
 | Frontend tests | `npm test` | ✅ 31 passed |
 | API smoke test vs LocalDB | scripted curl checks | ✅ 35/35 (paging, users, refresh/reuse/logout, 401/403) |
 | UI in browser | manual | ✅ |
+| GitHub Actions CI | `.github/workflows/ci.yml` on push | ✅ run 45088681548 (backend 40 s, frontend 24 s) |
 
 ## 14. How to continue development
 

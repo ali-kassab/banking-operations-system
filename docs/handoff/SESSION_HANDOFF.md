@@ -28,7 +28,7 @@ project": all five *Known limitations* items from v1.0 were implemented, in the 
 | `npm ci --dry-run` (npm 10.8.2) | OK — lockfile accepted |
 | API smoke script vs LocalDB (new API on port 5081) | 35/35 (first run 33/35 → found and fixed the paging-binding bug) |
 | Browser (Angular dev server on 4200 → API 5081) | Login; customers/transactions paging (Next/Prev, disabled states); 401 → single refresh → retry; Users page create (client-side password rule), deactivate; sign-out calls `/auth/logout` (204); employee sees no Users link and `/users` redirects; no horizontal overflow at 375px |
-| GitHub Actions run | **Not verified** — the workflow has not run on GitHub (branch not pushed yet) |
+| GitHub Actions run 45088681548 (commit `b5a8d63`) | ✅ Backend 40 s, Frontend 24 s. Only warning: v4 actions target deprecated Node 20 → bumped to v5 (Node 24) in a follow-up commit |
 
 ### Environment notes / side effects (local only)
 - The LocalDB database `BankingOpsDb` was **migrated** to `AddUserManagementAndRefreshTokens`.
@@ -43,13 +43,14 @@ project": all five *Known limitations* items from v1.0 were implemented, in the 
   with `npx npm@11.21.2 install --save-dev --save-exact vitest@4.1.12`.
 
 ### Git / publishing state
-- Branch `feature/v1.1-known-limitations` — **not pushed yet**: pushing a new branch needs the user's explicit approval
-  (user rule). Not merged; no PR. `main` unchanged at `9f02286`.
+- Branch `feature/v1.1-known-limitations` pushed to `origin` with the user's approval (remote head `b5a8d63` verified).
+  The follow-up commit bumping the CI actions to v5 + this handoff update is local until the user approves another push.
+  Not merged; no PR. `main` unchanged at `9f02286`.
 - Earlier branches `docs/session-2026-11-23` and `fix/clear-form-errors-on-cancel` are pushed; this branch contains both.
 
 ### Exact next step for the next session
-1. If not done yet: ask for approval and push `feature/v1.1-known-limitations` (`git push -u origin feature/v1.1-known-limitations`),
-   then check the GitHub Actions run.
+1. If the CI-actions/handoff commit is still local, ask for approval to push it (`git push`), then check that the
+   GitHub Actions run passes without the Node 20 warning.
 2. Restart the local API (see above) before demoing.
 3. Ask the user whether to open a PR into `main` (never merge without explicit approval).
 4. No further roadmap is approved. Possible future ideas (only if the user asks): HttpOnly-cookie refresh token,
