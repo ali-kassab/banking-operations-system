@@ -44,13 +44,13 @@ project": all five *Known limitations* items from v1.0 were implemented, in the 
 
 ### Git / publishing state
 - Branch `feature/v1.1-known-limitations` pushed to `origin` with the user's approval (remote head `b5a8d63` verified).
-  The follow-up commit bumping the CI actions to v5 + this handoff update is local until the user approves another push.
+  Follow-up `11ff497` (CI actions v4 → v5) was also pushed with approval; its CI run 45088976648 passed
+  (backend 36 s, frontend 16 s) with no warnings.
   Not merged; no PR. `main` unchanged at `9f02286`.
 - Earlier branches `docs/session-2026-11-23` and `fix/clear-form-errors-on-cancel` are pushed; this branch contains both.
 
 ### Exact next step for the next session
-1. If the CI-actions/handoff commit is still local, ask for approval to push it (`git push`), then check that the
-   GitHub Actions run passes without the Node 20 warning.
+1. If `git status` shows the branch ahead of `origin` (a docs-only handoff correction), ask for approval to push it.
 2. Restart the local API (see above) before demoing.
 3. Ask the user whether to open a PR into `main` (never merge without explicit approval).
 4. No further roadmap is approved. Possible future ideas (only if the user asks): HttpOnly-cookie refresh token,
