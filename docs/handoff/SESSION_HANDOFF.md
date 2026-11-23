@@ -1,5 +1,67 @@
 # Session handoff
 
+## Session: 2026-11-23 (3) — v1.1: paging, user management, refresh tokens, frontend tests, CI
+
+### Overview
+Portfolio banking back-office (ASP.NET Core 10 + EF Core/SQL Server + Angular 22). The user asked to "complete the
+project": all five *Known limitations* items from v1.0 were implemented, in the suggested order. The user also decided
+**no Docker** in this project (now recorded in `PROJECT_HANDOFF.md` §10).
+
+### Completed (all on branch `feature/v1.1-known-limitations`, created from `fix/clear-form-errors-on-cancel`)
+| Commit | What |
+|--------|------|
+| `6582753` | API: paging (`PageQuery`/`PagedResponse<T>`), `UsersController` + `UserService`, refresh tokens (`RefreshToken` entity, rotation, reuse detection, logout), migration `AddUserManagementAndRefreshTokens`, 30 new tests |
+| `f8c9930` | Fix: `?page=&pageSize=` were ignored because the action parameter was named `page` (renamed to `paging`) — found by the smoke test |
+| `4d47aa2` | Frontend: pager component, paged pages, Users page + `adminGuard`, interceptor refresh-and-retry, logout revocation, topbar fit |
+| `5923547` | Frontend tests: Vitest 4.1.12 + jsdom 31.0.0 via `@angular/build:unit-test`, 31 specs, `src/test-setup.ts` |
+| `7369b68` | `.github/workflows/ci.yml` (backend build `-warnaserror` + tests, frontend `npm ci` + build + tests) |
+| (docs commit) | README, `docs/architecture.md`, `docs/project-overview.md`, PROJECT_HANDOFF, CHANGELOG 1.1.0, this file |
+
+### Verification (actual results)
+| Check | Result |
+|-------|--------|
+| `dotnet build Banking.sln -c Release -warnaserror` | 0 warnings, 0 errors |
+| `dotnet test` | 66 passed, 0 failed |
+| `dotnet ef migrations has-pending-model-changes` | No changes |
+| `npm run build` | Success, 381.68 kB initial (98.42 kB transferred), no warnings |
+| `npm test` | 6 files, 31 passed |
+| `npm ci --dry-run` (npm 10.8.2) | OK — lockfile accepted |
+| API smoke script vs LocalDB (new API on port 5081) | 35/35 (first run 33/35 → found and fixed the paging-binding bug) |
+| Browser (Angular dev server on 4200 → API 5081) | Login; customers/transactions paging (Next/Prev, disabled states); 401 → single refresh → retry; Users page create (client-side password rule), deactivate; sign-out calls `/auth/logout` (204); employee sees no Users link and `/users` redirects; no horizontal overflow at 375px |
+| GitHub Actions run | **Not verified** — the workflow has not run on GitHub (branch not pushed yet) |
+
+### Environment notes / side effects (local only)
+- The LocalDB database `BankingOpsDb` was **migrated** to `AddUserManagementAndRefreshTokens`.
+- Test data added there: deactivated users `smoke17910`, `smoke25132` (smoke script) and `ui.tester` (browser test);
+  a 5.00 deposit on account `5504380647` (customer "Test Smoke"). Nothing deleted.
+- An **old API process from the previous session (PID 21840, `Banking.API.exe`, port 5080) and the old Angular dev
+  server (4200) were still running**; I was not permitted to stop them. The 4200 server now serves the new frontend,
+  but the 5080 API is still the **old** build, so the running app is inconsistent until the API is restarted:
+  stop it, then `cd backend; dotnet run --project Banking.API`.
+- The browser test temporarily pointed `API_URL` to 5081; this was reverted (`api.config.ts` unchanged in git).
+- npm 10.8.2 crashes with `Cannot read properties of null (reading 'edgesOut')` when installing Vitest; it was installed
+  with `npx npm@11.21.2 install --save-dev --save-exact vitest@4.1.12`.
+
+### Git / publishing state
+- Branch `feature/v1.1-known-limitations` — **not pushed yet**: pushing a new branch needs the user's explicit approval
+  (user rule). Not merged; no PR. `main` unchanged at `9f02286`.
+- Earlier branches `docs/session-2026-11-23` and `fix/clear-form-errors-on-cancel` are pushed; this branch contains both.
+
+### Exact next step for the next session
+1. If not done yet: ask for approval and push `feature/v1.1-known-limitations` (`git push -u origin feature/v1.1-known-limitations`),
+   then check the GitHub Actions run.
+2. Restart the local API (see above) before demoing.
+3. Ask the user whether to open a PR into `main` (never merge without explicit approval).
+4. No further roadmap is approved. Possible future ideas (only if the user asks): HttpOnly-cookie refresh token,
+   searchable pickers instead of the 100-item dropdowns, browser end-to-end tests.
+
+### Constraints to keep
+- Readability over features; no MediatR/CQRS/generic repositories/AutoMapper/UI libraries; **no Docker**.
+- Layering: DTO → service → thin controller → Angular API method → page; paging parameter named `paging`.
+- Git identity `ali-kassab`; no AI attribution in commits; push/merge/PR only with explicit approval; never touch `main`.
+
+---
+
 ## Session: 2026-11-23 (2) — fix stale form errors on Cancel
 
 ### Project / release status

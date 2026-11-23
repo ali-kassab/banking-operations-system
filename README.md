@@ -15,14 +15,16 @@ with the important financial rules enforced in one place and covered by unit tes
 
 | Area | What you can do |
 |------|-----------------|
-| **Authentication** | Sign in with username + password, receive a JWT (60 min). |
-| **Authorization** | Two roles: **Admin** and **Employee**. Only Admins can open bank accounts. |
+| **Authentication** | Sign in with username + password, receive a short-lived JWT (15 min) and a single-use refresh token (7 days). The app refreshes the session automatically; signing out revokes it on the server. |
+| **Authorization** | Two roles: **Admin** and **Employee**. Only Admins can open bank accounts and manage users. |
+| **User management** | Admins create staff users, activate/deactivate them and reset passwords. |
 | **Dashboard** | Totals (customers, accounts, money held, transactions today) + latest transactions. |
 | **Customers** | List, search and create customers (unique email and national ID). |
 | **Bank accounts** | List/filter accounts, open Checking or Savings accounts with an optional initial deposit (Admin). |
 | **Deposits & withdrawals** | Cash in / cash out on an account; every operation is recorded. |
 | **Transfers** | Move money between two accounts atomically, with a shared reference number. |
-| **Transaction history** | Per-account history and a global "latest transactions" view. |
+| **Transaction history** | Per-account history and a global transactions view, newest first. |
+| **Paging** | Every list (customers, accounts, histories, users) is paged (`?page=&pageSize=`, max 100). |
 
 ### Business rules
 
@@ -46,7 +48,8 @@ with the important financial rules enforced in one place and covered by unit tes
 | Data access | Entity Framework Core 10, SQL Server (LocalDB for development) |
 | Security | JWT Bearer authentication, role-based authorization, PBKDF2 password hashing (ASP.NET Core Identity's `PasswordHasher`) |
 | API docs | Swagger UI (Swashbuckle) |
-| Tests | xUnit + EF Core SQLite in-memory provider |
+| Tests | Backend: xUnit + EF Core SQLite in-memory provider. Frontend: Vitest + jsdom via `ng test` |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) |
 | Frontend | Angular 22 (standalone components, signals, reactive forms, functional guard/interceptor), plain CSS |
 
 No other libraries are used (no MediatR, no AutoMapper, no UI component library).
@@ -109,7 +112,7 @@ banking-operations-system/
 │   ├── Banking.sln
 │   ├── dotnet-tools.json              # local dotnet-ef tool (for migrations)
 │   ├── Banking.API/                   # Web API host
-│   │   ├── Controllers/               # Auth, Dashboard, Customers, Accounts, Transactions
+│   │   ├── Controllers/               # Auth, Dashboard, Customers, Accounts, Transactions, Users
 │   │   ├── Middleware/                # ExceptionHandlingMiddleware
 │   │   ├── Authorization/Roles.cs
 │   │   ├── Program.cs                 # DI, JWT, CORS, Swagger, pipeline
@@ -119,9 +122,9 @@ banking-operations-system/
 │   │   ├── Dtos/                      # request/response models
 │   │   ├── Exceptions/                # NotFoundException, ConflictException
 │   │   ├── Mapping/DtoMapper.cs       # entity → DTO
-│   │   └── Services/                  # Auth, Customer, Account, Transaction, Dashboard
+│   │   └── Services/                  # Auth, User, Customer, Account, Transaction, Dashboard
 │   ├── Banking.Domain/
-│   │   ├── Entities/                  # User, Customer, BankAccount, Transaction
+│   │   ├── Entities/                  # User, RefreshToken, Customer, BankAccount, Transaction
 │   │   ├── Enums/                     # UserRole, AccountType, TransactionType
 │   │   └── Exceptions/DomainException.cs
 │   ├── Banking.Infrastructure/
@@ -132,10 +135,11 @@ banking-operations-system/
 ├── frontend/
 │   └── banking-client/                # Angular application
 │       └── src/app/
-│           ├── core/                  # models, API service, auth service, guard, interceptor
+│           ├── core/                  # models, API service, auth service, guards, interceptor (+ *.spec.ts)
 │           ├── layout/                # shell with top navigation
-│           ├── shared/                # transaction table
-│           └── pages/                 # login, dashboard, customers, accounts, account-detail, transfer, transactions
+│           ├── shared/                # transaction table, pager
+│           └── pages/                 # login, dashboard, customers, accounts, account-detail, transfer, transactions, users
+├── .github/workflows/ci.yml           # GitHub Actions: build + test backend and frontend
 ├── docs/
 │   ├── architecture.md
 │   ├── project-overview.md
@@ -206,13 +210,29 @@ cd backend
 dotnet test
 ```
 
+```powershell
+cd frontend/banking-client
+npm test
+```
+
+Backend: xUnit on in-memory SQLite (66 tests). Frontend: Vitest through `ng test` (31 tests).
+The same commands run in GitHub Actions on every push and pull request (`.github/workflows/ci.yml`).
+
 ---
 
 ## Authentication
 
-1. `POST /api/auth/login` with `{ "username": "...", "password": "..." }` returns `{ token, expiresAt, username, fullName, role }`.
-2. Send the token on every other request: `Authorization: Bearer <token>`.
-3. In Swagger UI, click **Authorize** and paste the token.
+1. `POST /api/auth/login` with `{ "username": "...", "password": "..." }` returns
+   `{ token, expiresAt, refreshToken, refreshTokenExpiresAt, username, fullName, role }`.
+2. Send the token on every other request: `Authorization: Bearer <token>`. It is valid for 15 minutes (`Jwt:ExpiryMinutes`).
+3. When it expires, `POST /api/auth/refresh` with `{ "refreshToken": "..." }` returns a new pair. Refresh tokens are
+   **single-use** (rotation); presenting a used one again revokes all of that user's sessions. They last 7 days
+   (`Jwt:RefreshTokenDays`) and only their SHA-256 hash is stored.
+4. `POST /api/auth/logout` with `{ "refreshToken": "..." }` revokes the session on the server.
+5. In Swagger UI, click **Authorize** and paste the token.
+
+Deactivated users cannot sign in or refresh; deactivation and password resets revoke the user's refresh tokens.
+An access token that was already issued stays valid until it expires (at most 15 minutes).
 
 The token contains the claims `sub` (user id), `name` (username) and `role` (`Admin` / `Employee`).
 It is signed with HMAC-SHA256 using `Jwt:Key`.
@@ -246,19 +266,30 @@ All routes are prefixed with `/api`. 🔒 = requires a JWT. 👑 = Admin only.
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
-| POST | `/auth/login` | – | Sign in, returns a JWT |
+| POST | `/auth/login` | – | Sign in, returns a JWT + refresh token |
+| POST | `/auth/refresh` | – | Exchange a refresh token for a new pair (401 if expired, revoked or reused) |
+| POST | `/auth/logout` | – | Revoke a refresh token (204) |
 | GET | `/dashboard/summary` | 🔒 | Totals and the 5 latest transactions |
-| GET | `/customers?search=` | 🔒 | List customers (optional search by name, email, national ID) |
+| GET | `/customers?search=&page=&pageSize=` | 🔒 | List customers (optional search by name, email, national ID) |
 | GET | `/customers/{id}` | 🔒 | Get one customer |
 | POST | `/customers` | 🔒 | Create a customer |
-| GET | `/accounts?customerId=` | 🔒 | List accounts (optionally for one customer) |
+| GET | `/accounts?customerId=&page=&pageSize=` | 🔒 | List accounts (optionally for one customer) |
 | GET | `/accounts/{id}` | 🔒 | Get one account |
 | POST | `/accounts` | 🔒👑 | Open an account (`customerId`, `type`: `Checking`/`Savings`, `initialDeposit`) |
 | POST | `/accounts/{id}/deposit` | 🔒 | Deposit `{ amount, description? }` |
 | POST | `/accounts/{id}/withdraw` | 🔒 | Withdraw `{ amount, description? }` |
-| GET | `/accounts/{id}/transactions` | 🔒 | Account history, newest first |
+| GET | `/accounts/{id}/transactions?page=&pageSize=` | 🔒 | Account history, newest first |
 | POST | `/transfers` | 🔒 | Transfer `{ fromAccountId, toAccountId, amount, description? }` |
-| GET | `/transactions?take=50` | 🔒 | Latest transactions across all accounts (max 200) |
+| GET | `/transactions?page=&pageSize=` | 🔒 | All transactions across all accounts, newest first |
+| GET | `/users?page=&pageSize=` | 🔒👑 | List staff users |
+| POST | `/users` | 🔒👑 | Create a user `{ username, fullName, password, role }` |
+| PUT | `/users/{id}/status` | 🔒👑 | Activate / deactivate `{ isActive }` (not yourself) |
+| PUT | `/users/{id}/password` | 🔒👑 | Reset a password `{ newPassword }` (204) |
+
+**Paging.** List endpoints take `page` (default 1) and `pageSize` (default 20, max 100) and return
+`{ items, page, pageSize, totalCount, totalPages }`. Out-of-range values give 400.
+
+**Passwords** for new users and resets: 8-100 characters with at least one letter and one digit.
 
 ### Error format
 
@@ -288,7 +319,8 @@ Errors use the standard [ProblemDetails](https://www.rfc-editor.org/rfc/rfc9457)
 
 | Table | Columns (main) | Notes |
 |-------|----------------|-------|
-| `Users` | Id, Username, FullName, PasswordHash, Role, CreatedAt | Username unique. Employees of the bank, not customers. |
+| `Users` | Id, Username, FullName, PasswordHash, Role, IsActive, CreatedAt | Username unique (stored lower-case). Employees of the bank, not customers. Never deleted, only deactivated. |
+| `RefreshTokens` | Id, UserId, TokenHash, ExpiresAt, CreatedAt, RevokedAt | TokenHash (SHA-256) unique; cascade-deleted with the user. |
 | `Customers` | Id, FirstName, LastName, Email, PhoneNumber, NationalId, CreatedAt | Email and NationalId unique. |
 | `BankAccounts` | Id, AccountNumber, Type, Balance `decimal(18,2)`, CustomerId, CreatedAt | AccountNumber unique; `CHECK (Balance >= 0)`; Balance is a concurrency token. |
 | `Transactions` | Id, BankAccountId, Type, Amount, BalanceAfter, Description, ReferenceNumber, CounterpartyAccountId, PerformedBy, CreatedAt | `CHECK (Amount > 0)`; a transfer = 2 rows with the same ReferenceNumber. |
@@ -299,11 +331,13 @@ Relationships: `Customer 1 ─ * BankAccount 1 ─ * Transaction` (delete restri
 
 ## Limitations
 
-- No refresh tokens, password reset or user management UI — users come from the seed data.
-- No paging on list endpoints (fine for a demo-size dataset).
+- Tokens are kept in `localStorage` (simple; an HttpOnly cookie would resist XSS better).
+- An access token stays valid until it expires (max 15 min) even after sign-out or deactivation.
+- The customer and account pickers (open account, transfer) list the first 100 entries.
 - Single currency; no interest, fees, account closing or freezing.
 - The concurrency check rejects a conflicting update (HTTP 409) rather than retrying it automatically.
-- The Angular app has no automated tests; it was verified manually against the running API.
+- Frontend tests are unit tests; there are no browser end-to-end tests.
+- No container setup: the project is run directly with the .NET SDK and Node (a deliberate decision, no Docker).
 
 ## License
 

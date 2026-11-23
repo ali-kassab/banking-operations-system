@@ -14,6 +14,7 @@ employees (`Admin` or `Employee`), and they act on behalf of customers.
 | View accounts and their history | ✅ | ✅ |
 | Deposit, withdraw, transfer | ✅ | ✅ |
 | **Open a new bank account** | ❌ (403) | ✅ |
+| **Manage users** (create, activate/deactivate, reset password) | ❌ (403) | ✅ |
 
 ## Typical workflow
 
@@ -34,8 +35,9 @@ employees (`Admin` or `Employee`), and they act on behalf of customers.
 
 ## Scope decisions
 
-Deliberately left out to keep the project small and readable: user management, refresh tokens, paging,
-multi-currency, interest/fees, account closing, audit tables, Docker, CI. See *Limitations* in the README and
+Added in v1.1: user management, refresh tokens, paging, frontend unit tests and CI.
+Deliberately left out to keep the project small and readable: multi-currency, interest/fees, account closing,
+audit tables. **Docker is intentionally not used** (owner decision). See *Limitations* in the README and
 *Outstanding issues* in `handoff/PROJECT_HANDOFF.md`.
 
 ## Reference projects reviewed
